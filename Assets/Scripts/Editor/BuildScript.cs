@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -51,4 +50,3 @@ public class BuildScript
         ZipFile.CreateFromDirectory(path, zipPath);
     }
 }
-#endif
