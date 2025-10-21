@@ -10,7 +10,7 @@ pipeline {
 
     agent {
         label {
-            label "Windows Build"
+            label ""
             customWorkspace "${CUSTOM_WORKSPACE}\\${PROJECT_NAME}"
         }
     }
