@@ -1,42 +1,39 @@
 def PROJECT_NAME = "Practice-Project"
-def CUSTOM_WORKSPACE = "E:\\Sample Projects\\Git Practicing\\${PROJECT_NAME}"
-def UNITY_INSTALLATION = "C:\\Program Files\\Unity\\Hub\\Editor\\6000.2.6f2\\Editor"
+def CUSTOM_WORKSPACE = "E:\\Sample Projects\\Git Practicing"
+def UNITY_VERSION = "6000.2.6f2"
+def UNITY_INSTALLATION = "C:\\Program Files\\Unity\\Hub\\Editor\\${UNITY_VERSION}\\Editor"
 
 pipeline {
     environment {
-        PROJECT_PATH = "${CUSTOM_WORKSPACE}"
+        PROJECT_PATH = "${CUSTOM_WORKSPACE}\\${PROJECT_NAME}"
     }
 
     agent {
         label {
-            label ""
-            customWorkspace "${CUSTOM_WORKSPACE}"
+            label "Windows Build"
+            customWorkspace "${CUSTOM_WORKSPACE}\\${PROJECT_NAME}"
         }
     }
 
     stages {
-        stage('Build Windows') {
-            when{
-                expression {
-                    BUILD_WINDOWS == 'true'
-                }
-            }
+        stage("Build Windows") {
+            when { expression { BUILD_WINDOWS == 'true'}}
             steps {
                 script {
                     withEnv(["UNITY_PATH=${UNITY_INSTALLATION}"]) {
-
+                        bat '''
+                        "%UNITY_PATH%/Unity.exe" -quit -batchmode -projectPath %PROJECT_PATH% -executeMethod BuildScript.BuildWindows -logFile -
+                        '''
                     }
                 }
             }
         }
 
-        stage('Deploy Windows') {
-            when{
-                expression {
-                    DEPLOY_WINDOWS == 'true'
-                }
+        stage("Deploy Windows") {
+            when{ expression { DEPLOY_WINDOWS == 'true' }}
+            steps {
+                echo 'Deploying Windows...'
             }
-
         }
     }
 }
