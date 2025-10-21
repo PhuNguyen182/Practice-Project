@@ -63,7 +63,7 @@ public class Projectile : MonoBehaviour
         }
         
         gameObject.SetActive(false);
-        m_Rigidbody.velocity = Vector3.zero;
+        m_Rigidbody.linearVelocity = Vector3.zero;
         m_Rigidbody.angularVelocity = Vector3.zero;
         m_Owner.ReturnProjecticle(this);
 
