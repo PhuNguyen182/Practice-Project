@@ -5,7 +5,7 @@ def UNITY_INSTALLATION = "C:\\Program Files\\Unity\\Hub\\Editor\\${UNITY_VERSION
 
 pipeline {
     environment {
-        PROJECT_PATH = "${CUSTOM_WORKSPACE}\\${PROJECT_NAME}"
+        PROJECT_PATH = "E:\\Sample Projects\\Git Practicing\\Practice-Project"
     }
 
     agent {
