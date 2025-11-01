@@ -109,7 +109,7 @@ public class BuildScript
                 Log($"Build time: {summary.totalTime}");
                 Log($"Output: {fullBuildPath}");
                 Log("========================================");
-                EditorApplication.Exit(0);
+                //EditorApplication.Exit(0);
             }
             else
             {
@@ -118,7 +118,7 @@ public class BuildScript
                 LogError($"Result: {summary.result}");
                 LogError($"Errors: {summary.totalErrors}");
                 LogError("========================================");
-                EditorApplication.Exit(1);
+                //EditorApplication.Exit(1);
             }
         }
         catch (Exception e)
