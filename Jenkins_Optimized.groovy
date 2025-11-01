@@ -85,7 +85,7 @@ pipeline {
     // ============================================
     environment {
         // Unity Configuration (TÙY CHỈNH THEO HỆ THỐNG CỦA BẠN)
-        UNITY_VERSION = '6000.0.26f1'
+        UNITY_VERSION = '6000.2.6f2'
         UNITY_PATH = "C:\\Program Files\\Unity\\Hub\\Editor\\${UNITY_VERSION}\\Editor\\Unity.exe"
         PROJECT_PATH = "${WORKSPACE}"
         
