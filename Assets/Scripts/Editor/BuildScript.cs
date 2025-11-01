@@ -1,52 +1,502 @@
+using System;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Build.Reporting;
+using UnityEngine;
 
+/// <summary>
+/// BuildScript cho Jenkins Pipeline
+/// Hỗ trợ build: Windows, Android (APK/AAB), iOS
+/// Unity Version: 6000.2.6f2
+/// </summary>
 public class BuildScript
 {
+    // ============================================
+    // BUILD CONFIGURATIONS
+    // ============================================
+    
+    private static string GetArgument(string name)
+    {
+        string[] args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i] == $"-{name}" && i + 1 < args.Length)
+            {
+                return args[i + 1];
+            }
+        }
+        return null;
+    }
+
+    private static void Log(string message)
+    {
+        Debug.Log($"[BuildScript] {message}");
+        Console.WriteLine($"[BuildScript] {message}");
+    }
+
+    private static void LogError(string message)
+    {
+        Debug.LogError($"[BuildScript] ERROR: {message}");
+        Console.WriteLine($"[BuildScript] ERROR: {message}");
+    }
+
+    // ============================================
+    // WINDOWS BUILD
+    // ============================================
+    
+    /// <summary>
+    /// Build Windows Standalone
+    /// Usage: -executeMethod BuildScript.BuildWindows -buildPath "Builds/Windows" -versionNumber "1.0.0" -buildNumber "1"
+    /// </summary>
+    [MenuItem("Build/Windows Standalone")]
     public static void BuildWindows()
     {
-        string targetPath = "Builds/Windows";
-        CreateDirectory(targetPath);
+        Log("========================================");
+        Log("🪟 Building Windows Standalone...");
+        Log("========================================");
 
-        BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions()
+        try
         {
-            scenes = GetSceneNames(),
-            locationPathName = $"{targetPath}/Game.exe",
-            target = BuildTarget.StandaloneWindows64,
-            options = BuildOptions.None
-        };
-        
-        BuildPipeline.BuildPlayer(buildPlayerOptions);
-        CreateZipBuild(targetPath);
+            // Lấy tham số từ command line
+            string baseBuildPath = GetArgument("buildPath") ?? "Builds/Windows";
+            string versionNumber = GetArgument("versionNumber") ?? PlayerSettings.bundleVersion;
+            string buildNumber = GetArgument("buildNumber") ?? PlayerSettings.Android.bundleVersionCode.ToString();
+            
+            // Cập nhật version
+            PlayerSettings.bundleVersion = versionNumber;
+            
+            // Tạo thư mục build theo version: Builds/Windows/1.0.0/
+            string buildPath = Path.Combine(baseBuildPath, versionNumber);
+            if (!Directory.Exists(buildPath))
+            {
+                Directory.CreateDirectory(buildPath);
+            }
+
+            // Tên file executable
+            string productName = PlayerSettings.productName;
+            string buildFileName = $"{productName}.exe";
+            string fullBuildPath = Path.Combine(buildPath, buildFileName);
+
+            Log($"Build Path: {fullBuildPath}");
+            Log($"Version: {versionNumber}");
+            Log($"Build Number: {buildNumber}");
+
+            // Lấy danh sách scenes
+            string[] scenes = GetEnabledScenes();
+            Log($"Scenes: {string.Join(", ", scenes)}");
+
+            // Build options
+            BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
+            {
+                scenes = scenes,
+                locationPathName = fullBuildPath,
+                target = BuildTarget.StandaloneWindows64,
+                options = BuildOptions.None
+            };
+
+            // Thực hiện build
+            Log("Building...");
+            BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+            BuildSummary summary = report.summary;
+
+            // Kiểm tra kết quả
+            if (summary.result == BuildResult.Succeeded)
+            {
+                Log("========================================");
+                Log($"✅ Windows Build SUCCEEDED!");
+                Log($"Build size: {FormatBytes(summary.totalSize)}");
+                Log($"Build time: {summary.totalTime}");
+                Log($"Output: {fullBuildPath}");
+                Log("========================================");
+                EditorApplication.Exit(0);
+            }
+            else
+            {
+                LogError("========================================");
+                LogError($"❌ Windows Build FAILED!");
+                LogError($"Result: {summary.result}");
+                LogError($"Errors: {summary.totalErrors}");
+                LogError("========================================");
+                EditorApplication.Exit(1);
+            }
+        }
+        catch (Exception e)
+        {
+            LogError($"Exception during Windows build: {e.Message}");
+            LogError(e.StackTrace);
+            EditorApplication.Exit(1);
+        }
     }
+
+    // ============================================
+    // ANDROID APK BUILD
+    // ============================================
     
-    private static void CreateDirectory(string path)
+    /// <summary>
+    /// Build Android APK
+    /// Usage: -executeMethod BuildScript.BuildAndroidAPK -buildPath "Builds/Android" 
+    ///        -keystorePath "path/to/keystore" -keystorePass "password" -keyaliasName "alias" -keyaliasPass "password"
+    ///        -versionNumber "1.0.0" -buildNumber "1"
+    /// </summary>
+    [MenuItem("Build/Android APK")]
+    public static void BuildAndroidAPK()
     {
-        if (!Directory.Exists(path))
+        Log("========================================");
+        Log("🤖 Building Android APK...");
+        Log("========================================");
+
+        try
         {
-            Directory.CreateDirectory(path);
-        }   
+            // Setup Android build
+            SetupAndroidBuild();
+
+            // Build APK (không phải AAB)
+            EditorUserBuildSettings.buildAppBundle = false;
+
+            // Lấy base path và version
+            string baseBuildPath = GetArgument("buildPath") ?? "Builds/Android";
+            string versionNumber = GetArgument("versionNumber") ?? PlayerSettings.bundleVersion;
+            string productName = PlayerSettings.productName;
+            
+            // Tạo path theo version: Builds/Android/1.0.0/game.apk
+            string versionPath = Path.Combine(baseBuildPath, versionNumber);
+            if (!Directory.Exists(versionPath))
+            {
+                Directory.CreateDirectory(versionPath);
+            }
+            
+            string buildPath = Path.Combine(versionPath, $"{productName}.apk");
+
+            Log($"Build Path: {buildPath}");
+
+            // Build
+            string[] scenes = GetEnabledScenes();
+            BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
+            {
+                scenes = scenes,
+                locationPathName = buildPath,
+                target = BuildTarget.Android,
+                options = BuildOptions.None
+            };
+
+            Log("Building APK...");
+            BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+            BuildSummary summary = report.summary;
+
+            // Kiểm tra kết quả
+            if (summary.result == BuildResult.Succeeded)
+            {
+                Log("========================================");
+                Log($"✅ Android APK Build SUCCEEDED!");
+                Log($"Build size: {FormatBytes(summary.totalSize)}");
+                Log($"Build time: {summary.totalTime}");
+                Log($"Output: {buildPath}");
+                Log("========================================");
+                EditorApplication.Exit(0);
+            }
+            else
+            {
+                LogError("========================================");
+                LogError($"❌ Android APK Build FAILED!");
+                LogError($"Result: {summary.result}");
+                LogError($"Errors: {summary.totalErrors}");
+                LogError("========================================");
+                EditorApplication.Exit(1);
+            }
+        }
+        catch (Exception e)
+        {
+            LogError($"Exception during Android APK build: {e.Message}");
+            LogError(e.StackTrace);
+            EditorApplication.Exit(1);
+        }
     }
 
-    private static string[] GetSceneNames()
+    // ============================================
+    // ANDROID AAB BUILD
+    // ============================================
+    
+    /// <summary>
+    /// Build Android App Bundle (AAB)
+    /// Usage: -executeMethod BuildScript.BuildAndroidAAB -buildPath "Builds/Android" 
+    ///        -keystorePath "path/to/keystore" -keystorePass "password" -keyaliasName "alias" -keyaliasPass "password"
+    ///        -versionNumber "1.0.0" -buildNumber "1"
+    /// </summary>
+    [MenuItem("Build/Android AAB")]
+    public static void BuildAndroidAAB()
     {
-        string[] sceneName = EditorBuildSettings.scenes
+        Log("========================================");
+        Log("📦 Building Android App Bundle (AAB)...");
+        Log("========================================");
+
+        try
+        {
+            // Setup Android build
+            SetupAndroidBuild();
+
+            // Build AAB
+            EditorUserBuildSettings.buildAppBundle = true;
+
+            // Lấy base path và version
+            string baseBuildPath = GetArgument("buildPath") ?? "Builds/Android";
+            string versionNumber = GetArgument("versionNumber") ?? PlayerSettings.bundleVersion;
+            string productName = PlayerSettings.productName;
+            
+            // Tạo path theo version: Builds/Android/1.0.0/game.aab
+            string versionPath = Path.Combine(baseBuildPath, versionNumber);
+            if (!Directory.Exists(versionPath))
+            {
+                Directory.CreateDirectory(versionPath);
+            }
+            
+            string buildPath = Path.Combine(versionPath, $"{productName}.aab");
+
+            Log($"Build Path: {buildPath}");
+
+            // Build
+            string[] scenes = GetEnabledScenes();
+            BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
+            {
+                scenes = scenes,
+                locationPathName = buildPath,
+                target = BuildTarget.Android,
+                options = BuildOptions.None
+            };
+
+            Log("Building AAB...");
+            BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+            BuildSummary summary = report.summary;
+
+            // Kiểm tra kết quả
+            if (summary.result == BuildResult.Succeeded)
+            {
+                Log("========================================");
+                Log($"✅ Android AAB Build SUCCEEDED!");
+                Log($"Build size: {FormatBytes(summary.totalSize)}");
+                Log($"Build time: {summary.totalTime}");
+                Log($"Output: {buildPath}");
+                Log("========================================");
+                EditorApplication.Exit(0);
+            }
+            else
+            {
+                LogError("========================================");
+                LogError($"❌ Android AAB Build FAILED!");
+                LogError($"Result: {summary.result}");
+                LogError($"Errors: {summary.totalErrors}");
+                LogError("========================================");
+                EditorApplication.Exit(1);
+            }
+        }
+        catch (Exception e)
+        {
+            LogError($"Exception during Android AAB build: {e.Message}");
+            LogError(e.StackTrace);
+            EditorApplication.Exit(1);
+        }
+    }
+
+    // ============================================
+    // iOS BUILD
+    // ============================================
+    
+    /// <summary>
+    /// Build iOS Xcode Project
+    /// Usage: -executeMethod BuildScript.BuildiOS -buildPath "Builds/iOS" -versionNumber "1.0.0" -buildNumber "1"
+    /// </summary>
+    [MenuItem("Build/iOS Xcode Project")]
+    public static void BuildiOS()
+    {
+        Log("========================================");
+        Log("🍎 Building iOS Xcode Project...");
+        Log("========================================");
+
+        try
+        {
+            // Lấy tham số
+            string baseBuildPath = GetArgument("buildPath") ?? "Builds/iOS";
+            string versionNumber = GetArgument("versionNumber") ?? PlayerSettings.bundleVersion;
+            string buildNumber = GetArgument("buildNumber") ?? PlayerSettings.iOS.buildNumber;
+
+            // Cập nhật version
+            PlayerSettings.bundleVersion = versionNumber;
+            PlayerSettings.iOS.buildNumber = buildNumber;
+
+            // Tạo thư mục theo version: Builds/iOS/1.0.0/
+            string buildPath = Path.Combine(baseBuildPath, versionNumber);
+            if (!Directory.Exists(buildPath))
+            {
+                Directory.CreateDirectory(buildPath);
+            }
+
+            Log($"Build Path: {buildPath}");
+            Log($"Version: {versionNumber}");
+            Log($"Build Number: {buildNumber}");
+
+            // iOS Settings
+            PlayerSettings.iOS.targetDevice = iOSTargetDevice.iPhoneAndiPad;
+            PlayerSettings.iOS.targetOSVersionString = "12.0"; // iOS minimum version
+            
+            // Lấy scenes
+            string[] scenes = GetEnabledScenes();
+            Log($"Scenes: {string.Join(", ", scenes)}");
+
+            // Build options
+            BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
+            {
+                scenes = scenes,
+                locationPathName = buildPath,
+                target = BuildTarget.iOS,
+                options = BuildOptions.None
+            };
+
+            Log("Building Xcode Project...");
+            BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+            BuildSummary summary = report.summary;
+
+            // Kiểm tra kết quả
+            if (summary.result == BuildResult.Succeeded)
+            {
+                Log("========================================");
+                Log($"✅ iOS Build SUCCEEDED!");
+                Log($"Build time: {summary.totalTime}");
+                Log($"Output: {buildPath}");
+                Log("⚠️  Tiếp theo: Sử dụng Xcode để build IPA và deploy TestFlight");
+                Log("========================================");
+                EditorApplication.Exit(0);
+            }
+            else
+            {
+                LogError("========================================");
+                LogError($"❌ iOS Build FAILED!");
+                LogError($"Result: {summary.result}");
+                LogError($"Errors: {summary.totalErrors}");
+                LogError("========================================");
+                EditorApplication.Exit(1);
+            }
+        }
+        catch (Exception e)
+        {
+            LogError($"Exception during iOS build: {e.Message}");
+            LogError(e.StackTrace);
+            EditorApplication.Exit(1);
+        }
+    }
+
+    // ============================================
+    // HELPER METHODS
+    // ============================================
+
+    /// <summary>
+    /// Setup Android build settings (keystore, version, etc.)
+    /// </summary>
+    private static void SetupAndroidBuild()
+    {
+        // Lấy tham số từ command line
+        string keystorePath = GetArgument("keystorePath");
+        string keystorePass = GetArgument("keystorePass");
+        string keyaliasName = GetArgument("keyaliasName");
+        string keyaliasPass = GetArgument("keyaliasPass");
+        string versionNumber = GetArgument("versionNumber") ?? PlayerSettings.bundleVersion;
+        string buildNumber = GetArgument("buildNumber") ?? PlayerSettings.Android.bundleVersionCode.ToString();
+
+        Log($"Version: {versionNumber}");
+        Log($"Build Number: {buildNumber}");
+
+        // Cập nhật version
+        PlayerSettings.bundleVersion = versionNumber;
+        
+        // Parse build number to int
+        if (int.TryParse(buildNumber, out int buildNumberInt))
+        {
+            PlayerSettings.Android.bundleVersionCode = buildNumberInt;
+        }
+
+        // Android settings
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
+        PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel24; // Android 7.0
+        PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel33; // Android 13
+
+        // Keystore configuration
+        if (!string.IsNullOrEmpty(keystorePath))
+        {
+            Log($"Using keystore: {keystorePath}");
+            PlayerSettings.Android.useCustomKeystore = true;
+            PlayerSettings.Android.keystoreName = keystorePath;
+            PlayerSettings.Android.keystorePass = keystorePass;
+            PlayerSettings.Android.keyaliasName = keyaliasName;
+            PlayerSettings.Android.keyaliasPass = keyaliasPass;
+        }
+        else
+        {
+            LogError("⚠️  Warning: No keystore provided! Using debug keystore.");
+        }
+
+        // Scripting backend (IL2CPP for better performance)
+        PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
+    }
+
+    /// <summary>
+    /// Lấy danh sách scenes được enable trong Build Settings
+    /// </summary>
+    private static string[] GetEnabledScenes()
+    {
+        return EditorBuildSettings.scenes
             .Where(scene => scene.enabled)
             .Select(scene => scene.path)
             .ToArray();
-        return sceneName;
     }
 
-    private static void CreateZipBuild(string path)
+    /// <summary>
+    /// Format bytes thành string dễ đọc
+    /// </summary>
+    private static string FormatBytes(ulong bytes)
     {
-        string zipPath = $"{path}.zip";
-        if (File.Exists(zipPath))
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
         {
-            File.Delete(zipPath);
+            order++;
+            len = len / 1024;
         }
-        
-        ZipFile.CreateFromDirectory(path, zipPath);
+        return $"{len:0.##} {sizes[order]}";
+    }
+
+    // ============================================
+    // MENU ITEMS - Build từ Unity Editor
+    // ============================================
+
+    [MenuItem("Build/Build All Platforms")]
+    public static void BuildAllPlatforms()
+    {
+        Log("========================================");
+        Log("🚀 Building All Platforms...");
+        Log("========================================");
+
+        BuildWindows();
+        BuildAndroidAPK();
+        BuildAndroidAAB();
+        BuildiOS();
+
+        Log("========================================");
+        Log("✅ All Platforms Build Completed!");
+        Log("========================================");
+    }
+
+    [MenuItem("Build/Clear Build Folder")]
+    public static void ClearBuildFolder()
+    {
+        string buildPath = "Builds";
+        if (Directory.Exists(buildPath))
+        {
+            Directory.Delete(buildPath, true);
+            Log($"✅ Cleared build folder: {buildPath}");
+        }
+        else
+        {
+            Log($"⚠️  Build folder doesn't exist: {buildPath}");
+        }
     }
 }
