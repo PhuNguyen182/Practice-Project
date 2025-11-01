@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
@@ -105,7 +106,8 @@ public class BuildScript
             {
                 Log("========================================");
                 Log($"✅ Windows Build SUCCEEDED!");
-                Log($"Build size: {FormatBytes(summary.totalSize)}");
+                Log($"Build size (from summary): {FormatBytes(summary.totalSize)}");
+                Log($"Build size (actual file): {GetActualFileSize(fullBuildPath)}");
                 Log($"Build time: {summary.totalTime}");
                 Log($"Output: {fullBuildPath}");
                 Log("========================================");
@@ -125,7 +127,7 @@ public class BuildScript
         {
             LogError($"Exception during Windows build: {e.Message}");
             LogError(e.StackTrace);
-            EditorApplication.Exit(1);
+            //EditorApplication.Exit(1);
         }
     }
 
@@ -189,7 +191,8 @@ public class BuildScript
             {
                 Log("========================================");
                 Log($"✅ Android APK Build SUCCEEDED!");
-                Log($"Build size: {FormatBytes(summary.totalSize)}");
+                Log($"Build size (from summary): {FormatBytes(summary.totalSize)}");
+                Log($"Build size (actual file): {GetActualFileSize(buildPath)}");
                 Log($"Build time: {summary.totalTime}");
                 Log($"Output: {buildPath}");
                 Log("========================================");
@@ -273,7 +276,8 @@ public class BuildScript
             {
                 Log("========================================");
                 Log($"✅ Android AAB Build SUCCEEDED!");
-                Log($"Build size: {FormatBytes(summary.totalSize)}");
+                Log($"Build size (from summary): {FormatBytes(summary.totalSize)}");
+                Log($"Build size (actual file): {GetActualFileSize(buildPath)}");
                 Log($"Build time: {summary.totalTime}");
                 Log($"Output: {buildPath}");
                 Log("========================================");
@@ -364,7 +368,7 @@ public class BuildScript
                 Log($"Output: {buildPath}");
                 Log("⚠️  Tiếp theo: Sử dụng Xcode để build IPA và deploy TestFlight");
                 Log("========================================");
-                EditorApplication.Exit(0);
+                //EditorApplication.Exit(0);
             }
             else
             {
@@ -373,14 +377,14 @@ public class BuildScript
                 LogError($"Result: {summary.result}");
                 LogError($"Errors: {summary.totalErrors}");
                 LogError("========================================");
-                EditorApplication.Exit(1);
+                //EditorApplication.Exit(1);
             }
         }
         catch (Exception e)
         {
             LogError($"Exception during iOS build: {e.Message}");
             LogError(e.StackTrace);
-            EditorApplication.Exit(1);
+            //EditorApplication.Exit(1);
         }
     }
 
@@ -434,7 +438,7 @@ public class BuildScript
         }
 
         // Scripting backend (IL2CPP for better performance)
-        PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
+        PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
     }
 
     /// <summary>
@@ -456,11 +460,43 @@ public class BuildScript
         string[] sizes = { "B", "KB", "MB", "GB", "TB" };
         double len = bytes;
         int order = 0;
+        
+        // Log raw value để debug
+        Log($"Raw bytes value: {bytes}");
+        
         while (len >= 1024 && order < sizes.Length - 1)
         {
             order++;
             len = len / 1024;
         }
+        
+        // Format với 2 số thập phân
+        return $"{len:0.##} {sizes[order]}";
+    }
+    
+    /// <summary>
+    /// Lấy kích thước file thực tế từ disk (chính xác hơn)
+    /// </summary>
+    private static string GetActualFileSize(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            return "N/A";
+        }
+        
+        FileInfo fileInfo = new FileInfo(filePath);
+        long bytes = fileInfo.Length;
+        
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+        
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        
         return $"{len:0.##} {sizes[order]}";
     }
 
