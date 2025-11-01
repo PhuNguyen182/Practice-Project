@@ -193,7 +193,7 @@ public class BuildScript
                 Log($"Build time: {summary.totalTime}");
                 Log($"Output: {buildPath}");
                 Log("========================================");
-                EditorApplication.Exit(0);
+                //EditorApplication.Exit(0);
             }
             else
             {
@@ -202,14 +202,14 @@ public class BuildScript
                 LogError($"Result: {summary.result}");
                 LogError($"Errors: {summary.totalErrors}");
                 LogError("========================================");
-                EditorApplication.Exit(1);
+                //EditorApplication.Exit(1);
             }
         }
         catch (Exception e)
         {
             LogError($"Exception during Android APK build: {e.Message}");
             LogError(e.StackTrace);
-            EditorApplication.Exit(1);
+            //EditorApplication.Exit(1);
         }
     }
 
@@ -277,7 +277,7 @@ public class BuildScript
                 Log($"Build time: {summary.totalTime}");
                 Log($"Output: {buildPath}");
                 Log("========================================");
-                EditorApplication.Exit(0);
+                //EditorApplication.Exit(0);
             }
             else
             {
@@ -286,14 +286,14 @@ public class BuildScript
                 LogError($"Result: {summary.result}");
                 LogError($"Errors: {summary.totalErrors}");
                 LogError("========================================");
-                EditorApplication.Exit(1);
+                //EditorApplication.Exit(1);
             }
         }
         catch (Exception e)
         {
             LogError($"Exception during Android AAB build: {e.Message}");
             LogError(e.StackTrace);
-            EditorApplication.Exit(1);
+            //EditorApplication.Exit(1);
         }
     }
 
