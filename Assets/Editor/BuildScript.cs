@@ -53,6 +53,21 @@ public class BuildScript
     [MenuItem("Build/Windows Standalone")]
     public static void BuildWindows()
     {
+        bool success = BuildWindowsInternal();
+        
+        // Chỉ exit khi chạy từ command line (batch mode hoặc bị gọi trực tiếp)
+        if (ShouldExitAfterBuild())
+        {
+            EditorApplication.Exit(success ? 0 : 1);
+        }
+    }
+
+    /// <summary>
+    /// Internal method để build Windows - không tự động exit
+    /// Trả về true nếu build thành công, false nếu thất bại
+    /// </summary>
+    private static bool BuildWindowsInternal()
+    {
         Log("========================================");
         Log("🪟 Building Windows Standalone...");
         Log("========================================");
@@ -111,7 +126,7 @@ public class BuildScript
                 Log($"Build time: {summary.totalTime}");
                 Log($"Output: {fullBuildPath}");
                 Log("========================================");
-                EditorApplication.Exit(0);
+                return true;
             }
             else
             {
@@ -120,14 +135,14 @@ public class BuildScript
                 LogError($"Result: {summary.result}");
                 LogError($"Errors: {summary.totalErrors}");
                 LogError("========================================");
-                EditorApplication.Exit(1);
+                return false;
             }
         }
         catch (Exception e)
         {
             LogError($"Exception during Windows build: {e.Message}");
             LogError(e.StackTrace);
-            EditorApplication.Exit(1);
+            return false;
         }
     }
 
@@ -144,6 +159,21 @@ public class BuildScript
     [MenuItem("Build/Android APK")]
     public static void BuildAndroidAPK()
     {
+        bool success = BuildAndroidAPKInternal();
+        
+        // Chỉ exit khi chạy từ command line (batch mode hoặc bị gọi trực tiếp)
+        if (ShouldExitAfterBuild())
+        {
+            EditorApplication.Exit(success ? 0 : 1);
+        }
+    }
+
+    /// <summary>
+    /// Internal method để build APK - không tự động exit
+    /// Trả về true nếu build thành công, false nếu thất bại
+    /// </summary>
+    private static bool BuildAndroidAPKInternal()
+    {
         Log("========================================");
         Log("🤖 Building Android APK...");
         Log("========================================");
@@ -156,10 +186,9 @@ public class BuildScript
             {
                 LogError("========================================");
                 LogError("❌ Cannot proceed with Android build!");
-                LogError("Build target switch failed. Exiting...");
+                LogError("Build target switch failed.");
                 LogError("========================================");
-                EditorApplication.Exit(1);
-                return;
+                return false;
             }
             Log("✅ Build target check completed");
 
@@ -201,8 +230,7 @@ public class BuildScript
                 LogError("Please add at least one scene to Build Settings:");
                 LogError("  File → Build Settings → Add Open Scenes");
                 LogError("========================================");
-                EditorApplication.Exit(1);
-                return;
+                return false;
             }
             
             Log($"✅ Found {scenes.Length} scene(s) to build:");
@@ -253,7 +281,7 @@ public class BuildScript
                 }
                 
                 Log("========================================");
-                EditorApplication.Exit(0);
+                return true;
             }
             else
             {
@@ -281,14 +309,14 @@ public class BuildScript
                 }
                 
                 LogError("========================================");
-                EditorApplication.Exit(1);
+                return false;
             }
         }
         catch (Exception e)
         {
             LogError($"Exception during Android APK build: {e.Message}");
             LogError(e.StackTrace);
-            EditorApplication.Exit(1);
+            return false;
         }
     }
 
@@ -305,6 +333,21 @@ public class BuildScript
     [MenuItem("Build/Android AAB")]
     public static void BuildAndroidAAB()
     {
+        bool success = BuildAndroidAABInternal();
+        
+        // Chỉ exit khi chạy từ command line (batch mode hoặc bị gọi trực tiếp)
+        if (ShouldExitAfterBuild())
+        {
+            EditorApplication.Exit(success ? 0 : 1);
+        }
+    }
+
+    /// <summary>
+    /// Internal method để build AAB - không tự động exit
+    /// Trả về true nếu build thành công, false nếu thất bại
+    /// </summary>
+    private static bool BuildAndroidAABInternal()
+    {
         Log("========================================");
         Log("📦 Building Android App Bundle (AAB)...");
         Log("========================================");
@@ -317,10 +360,9 @@ public class BuildScript
             {
                 LogError("========================================");
                 LogError("❌ Cannot proceed with Android build!");
-                LogError("Build target switch failed. Exiting...");
+                LogError("Build target switch failed.");
                 LogError("========================================");
-                EditorApplication.Exit(1);
-                return;
+                return false;
             }
             Log("✅ Build target check completed");
 
@@ -362,8 +404,7 @@ public class BuildScript
                 LogError("Please add at least one scene to Build Settings:");
                 LogError("  File → Build Settings → Add Open Scenes");
                 LogError("========================================");
-                EditorApplication.Exit(1);
-                return;
+                return false;
             }
             
             Log($"✅ Found {scenes.Length} scene(s) to build:");
@@ -414,7 +455,7 @@ public class BuildScript
                 }
                 
                 Log("========================================");
-                EditorApplication.Exit(0);
+                return true;
             }
             else
             {
@@ -442,14 +483,14 @@ public class BuildScript
                 }
                 
                 LogError("========================================");
-                EditorApplication.Exit(1);
+                return false;
             }
         }
         catch (Exception e)
         {
             LogError($"Exception during Android AAB build: {e.Message}");
             LogError(e.StackTrace);
-            EditorApplication.Exit(1);
+            return false;
         }
     }
 
@@ -463,6 +504,21 @@ public class BuildScript
     /// </summary>
     [MenuItem("Build/iOS Xcode Project")]
     public static void BuildiOS()
+    {
+        bool success = BuildiOSInternal();
+        
+        // Chỉ exit khi chạy từ command line (batch mode hoặc bị gọi trực tiếp)
+        if (ShouldExitAfterBuild())
+        {
+            EditorApplication.Exit(success ? 0 : 1);
+        }
+    }
+
+    /// <summary>
+    /// Internal method để build iOS - không tự động exit
+    /// Trả về true nếu build thành công, false nếu thất bại
+    /// </summary>
+    private static bool BuildiOSInternal()
     {
         Log("========================================");
         Log("🍎 Building iOS Xcode Project...");
@@ -520,7 +576,7 @@ public class BuildScript
                 Log($"Output: {buildPath}");
                 Log("⚠️  Tiếp theo: Sử dụng Xcode để build IPA và deploy TestFlight");
                 Log("========================================");
-                EditorApplication.Exit(0);
+                return true;
             }
             else
             {
@@ -529,14 +585,14 @@ public class BuildScript
                 LogError($"Result: {summary.result}");
                 LogError($"Errors: {summary.totalErrors}");
                 LogError("========================================");
-                EditorApplication.Exit(1);
+                return false;
             }
         }
         catch (Exception e)
         {
             LogError($"Exception during iOS build: {e.Message}");
             LogError(e.StackTrace);
-            EditorApplication.Exit(1);
+            return false;
         }
     }
 
@@ -545,26 +601,47 @@ public class BuildScript
     // ============================================
 
     /// <summary>
-    /// Switch build target sang Android và kiểm tra support
+    /// Kiểm tra xem Unity đang chạy trong batch mode hay không
+    /// </summary>
+    private static bool IsBatchMode()
+    {
+        string[] args = Environment.GetCommandLineArgs();
+        return args.Contains("-batchmode") || args.Contains("-quit");
+    }
+
+    /// <summary>
+    /// Kiểm tra xem có nên exit sau khi build hay không
+    /// Chỉ exit khi chạy từ command line với -executeMethod
+    /// Không exit khi build từ menu hoặc từ BuildAllPlatforms
+    /// </summary>
+    private static bool ShouldExitAfterBuild()
+    {
+        string[] args = Environment.GetCommandLineArgs();
+        
+        // Nếu có -executeMethod trong command line, có nghĩa là được gọi trực tiếp từ Jenkins/CI
+        // và cần exit để trả về exit code
+        bool hasExecuteMethod = args.Contains("-executeMethod");
+        
+        // Nếu có -batchmode, đây là batch mode từ Jenkins/CI
+        bool isBatchMode = IsBatchMode();
+        
+        // Exit khi chạy từ command line với executeMethod
+        return hasExecuteMethod || isBatchMode;
+    }
+
+    /// <summary>
+    /// Switch build target sang Android
+    /// Xử lý khác nhau cho batch mode (Jenkins/CI) và editor mode
     /// </summary>
     private static bool SwitchToAndroidBuildTarget()
     {
         try
         {
+            bool isBatchMode = IsBatchMode();
+            Log($"Running mode: {(isBatchMode ? "Batch Mode (CI/Jenkins)" : "Unity Editor Mode")}");
+            
             BuildTarget currentTarget = EditorUserBuildSettings.activeBuildTarget;
             Log($"Current active build target: {currentTarget}");
-            
-            /*// Kiểm tra Android build target có được support không
-            bool isSupported = BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android);
-            Log($"Android Build Target Supported: {isSupported}");
-            
-            if (!isSupported)
-            {
-                LogError("❌ Android Build Target is NOT supported!");
-                LogError("Please install Android Build Support in Unity Hub:");
-                LogError("  Unity Hub → Installs → Add Modules → Android Build Support");
-                return false;
-            }*/
 
             // Nếu đã là Android thì không cần switch
             if (currentTarget == BuildTarget.Android)
@@ -574,7 +651,7 @@ public class BuildScript
             }
 
             // Switch sang Android
-            Log($"Switching build target from {currentTarget} to Android...");
+            Log($"Attempting to switch build target from {currentTarget} to Android...");
             
             try
             {
@@ -583,45 +660,111 @@ public class BuildScript
                     BuildTarget.Android
                 );
                 
-                if (switchResult)
+                Log($"SwitchActiveBuildTarget returned: {switchResult}");
+                
+                // Trong batch mode, switch có thể fail nhưng BuildPlayerOptions vẫn hoạt động
+                if (isBatchMode)
                 {
-                    // Verify sau khi switch
-                    BuildTarget newTarget = EditorUserBuildSettings.activeBuildTarget;
-                    if (newTarget == BuildTarget.Android)
+                    if (switchResult)
                     {
-                        Log("✅ Successfully switched to Android build target (verified)");
+                        BuildTarget newTarget = EditorUserBuildSettings.activeBuildTarget;
+                        Log($"Active build target after switch: {newTarget}");
+                        if (newTarget == BuildTarget.Android)
+                        {
+                            Log("✅ Successfully switched to Android in batch mode (verified)");
+                        }
+                        else
+                        {
+                            Log($"⚠️  Active target is still {newTarget}, but continuing anyway");
+                            Log("⚠️  BuildPlayerOptions will handle the target switch during build");
+                        }
                         return true;
                     }
                     else
                     {
-                        LogError($"⚠️  Warning: Switch reported success but active target is: {newTarget}");
-                        LogError("This may indicate a timing issue. Attempting to continue...");
-                        // Vẫn tiếp tục, có thể Unity đang xử lý
-                        return true;
+                        // Switch failed trong batch mode - vẫn tiếp tục
+                        Log("⚠️  SwitchActiveBuildTarget returned false in batch mode");
+                        Log("⚠️  This is common in batch mode - continuing anyway");
+                        Log("⚠️  BuildPlayerOptions will attempt to switch during build");
+                        Log("⚠️  If build fails, check Android Build Support installation");
+                        return true; // Return true để tiếp tục
                     }
                 }
                 else
                 {
-                    LogError("❌ Failed to switch to Android build target!");
-                    LogError("SwitchActiveBuildTarget returned false.");
-                    LogError("This may indicate Android Build Support is not properly installed.");
-                    return false;
+                    // Editor mode - cần switch thành công
+                    if (switchResult)
+                    {
+                        BuildTarget newTarget = EditorUserBuildSettings.activeBuildTarget;
+                        if (newTarget == BuildTarget.Android)
+                        {
+                            Log("✅ Successfully switched to Android build target (verified)");
+                            return true;
+                        }
+                        else
+                        {
+                            LogError($"⚠️  Switch reported success but active target is: {newTarget}");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        LogError("========================================");
+                        LogError("❌ Failed to switch to Android build target!");
+                        LogError("");
+                        LogError("Possible causes:");
+                        LogError("  1. Android Build Support is not installed");
+                        LogError("  2. Android SDK/NDK not configured");
+                        LogError("");
+                        LogError("Please check:");
+                        LogError("  - Unity Hub → Installs → Add Modules → Android Build Support");
+                        LogError("  - Edit → Preferences → External Tools → Android SDK/NDK paths");
+                        LogError("========================================");
+                        return false;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                LogError($"❌ Exception while switching build target: {ex.Message}");
-                LogError($"Exception type: {ex.GetType().Name}");
-                LogError($"Stack trace: {ex.StackTrace}");
-                return false;
+                if (isBatchMode)
+                {
+                    // Batch mode: log warning nhưng tiếp tục
+                    Log("⚠️  Exception while switching in batch mode:");
+                    Log($"   {ex.Message}");
+                    Log("⚠️  Continuing anyway - BuildPlayerOptions will handle the switch");
+                    return true;
+                }
+                else
+                {
+                    // Editor mode: báo lỗi và dừng
+                    LogError("========================================");
+                    LogError($"❌ Exception while switching build target: {ex.Message}");
+                    LogError($"Type: {ex.GetType().Name}");
+                    LogError($"Stack: {ex.StackTrace}");
+                    LogError("========================================");
+                    return false;
+                }
             }
         }
         catch (Exception e)
         {
-            LogError($"❌ Exception in SwitchToAndroidBuildTarget: {e.Message}");
-            LogError($"Exception type: {e.GetType().Name}");
-            LogError($"Stack trace: {e.StackTrace}");
-            return false;
+            bool isBatchMode = IsBatchMode();
+            
+            if (isBatchMode)
+            {
+                Log("⚠️  Exception in SwitchToAndroidBuildTarget (batch mode):");
+                Log($"   {e.Message}");
+                Log("⚠️  Continuing - BuildPlayerOptions will try to switch");
+                return true;
+            }
+            else
+            {
+                LogError("========================================");
+                LogError($"❌ Exception in SwitchToAndroidBuildTarget: {e.Message}");
+                LogError($"Type: {e.GetType().Name}");
+                LogError("========================================");
+                return false;
+            }
         }
     }
 
@@ -744,14 +887,74 @@ public class BuildScript
         Log("🚀 Building All Platforms...");
         Log("========================================");
 
-        BuildWindows();
-        BuildAndroidAPK();
-        BuildAndroidAAB();
-        BuildiOS();
+        int successCount = 0;
+        int failCount = 0;
 
+        // Build Windows
+        Log("\n[1/4] Building Windows...");
+        if (BuildWindowsInternal())
+        {
+            successCount++;
+            Log("✅ Windows build completed successfully");
+        }
+        else
+        {
+            failCount++;
+            LogError("❌ Windows build failed");
+        }
+
+        // Build Android APK
+        Log("\n[2/4] Building Android APK...");
+        if (BuildAndroidAPKInternal())
+        {
+            successCount++;
+            Log("✅ Android APK build completed successfully");
+        }
+        else
+        {
+            failCount++;
+            LogError("❌ Android APK build failed");
+        }
+
+        // Build Android AAB
+        Log("\n[3/4] Building Android AAB...");
+        if (BuildAndroidAABInternal())
+        {
+            successCount++;
+            Log("✅ Android AAB build completed successfully");
+        }
+        else
+        {
+            failCount++;
+            LogError("❌ Android AAB build failed");
+        }
+
+        // Build iOS
+        Log("\n[4/4] Building iOS...");
+        if (BuildiOSInternal())
+        {
+            successCount++;
+            Log("✅ iOS build completed successfully");
+        }
+        else
+        {
+            failCount++;
+            LogError("❌ iOS build failed");
+        }
+
+        // Summary
         Log("========================================");
-        Log("✅ All Platforms Build Completed!");
+        Log("🎯 Build All Platforms Summary:");
+        Log($"   ✅ Success: {successCount}");
+        Log($"   ❌ Failed: {failCount}");
+        Log($"   Total: {successCount + failCount}");
         Log("========================================");
+
+        // Chỉ exit nếu được gọi từ command line
+        if (ShouldExitAfterBuild())
+        {
+            EditorApplication.Exit(failCount > 0 ? 1 : 0);
+        }
     }
 
     [MenuItem("Build/Clear Build Folder")]
