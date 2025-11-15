@@ -554,7 +554,7 @@ public class BuildScript
             BuildTarget currentTarget = EditorUserBuildSettings.activeBuildTarget;
             Log($"Current active build target: {currentTarget}");
             
-            // Kiểm tra Android build target có được support không
+            /*// Kiểm tra Android build target có được support không
             bool isSupported = BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android);
             Log($"Android Build Target Supported: {isSupported}");
             
@@ -564,7 +564,7 @@ public class BuildScript
                 LogError("Please install Android Build Support in Unity Hub:");
                 LogError("  Unity Hub → Installs → Add Modules → Android Build Support");
                 return false;
-            }
+            }*/
 
             // Nếu đã là Android thì không cần switch
             if (currentTarget == BuildTarget.Android)
