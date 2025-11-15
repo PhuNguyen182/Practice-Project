@@ -151,20 +151,30 @@ public class BuildScript
         try
         {
             // QUAN TRỌNG: Switch build target sang Android trước
+            Log("Step 1: Checking and switching build target...");
             if (!SwitchToAndroidBuildTarget())
             {
-                LogError("Cannot proceed with Android build. Exiting...");
+                LogError("========================================");
+                LogError("❌ Cannot proceed with Android build!");
+                LogError("Build target switch failed. Exiting...");
+                LogError("========================================");
                 EditorApplication.Exit(1);
                 return;
             }
+            Log("✅ Build target check completed");
 
             // Setup Android build
+            Log("Step 2: Setting up Android build configuration...");
             SetupAndroidBuild();
+            Log("✅ Android build configuration completed");
 
             // Build APK (không phải AAB)
+            Log("Step 3: Configuring build type (APK)...");
             EditorUserBuildSettings.buildAppBundle = false;
+            Log("✅ Build type set to APK");
 
             // Lấy base path và version
+            Log("Step 4: Preparing build paths...");
             string baseBuildPath = GetArgument("buildPath") ?? "Builds/Android";
             string versionNumber = GetArgument("versionNumber") ?? PlayerSettings.bundleVersion;
             string productName = PlayerSettings.productName;
@@ -174,25 +184,34 @@ public class BuildScript
             if (!Directory.Exists(versionPath))
             {
                 Directory.CreateDirectory(versionPath);
+                Log($"Created directory: {versionPath}");
             }
             
             string buildPath = Path.Combine(versionPath, $"{productName}.apk");
-
             Log($"Build Path: {buildPath}");
+            Log("✅ Build paths prepared");
 
             // Kiểm tra scenes
+            Log("Step 5: Validating scenes...");
             string[] scenes = GetEnabledScenes();
             if (scenes == null || scenes.Length == 0)
             {
+                LogError("========================================");
                 LogError("❌ No scenes enabled in Build Settings!");
                 LogError("Please add at least one scene to Build Settings:");
                 LogError("  File → Build Settings → Add Open Scenes");
+                LogError("========================================");
                 EditorApplication.Exit(1);
                 return;
             }
             
-            Log($"Scenes to build ({scenes.Length}): {string.Join(", ", scenes)}");
+            Log($"✅ Found {scenes.Length} scene(s) to build:");
+            for (int i = 0; i < scenes.Length; i++)
+            {
+                Log($"  [{i + 1}] {scenes[i]}");
+            }
 
+            Log("Step 6: Creating build options...");
             BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
             {
                 scenes = scenes,
@@ -200,10 +219,17 @@ public class BuildScript
                 target = BuildTarget.Android,
                 options = BuildOptions.None
             };
+            
+            // Verify build target one more time
+            Log($"Final verification - Active build target: {EditorUserBuildSettings.activeBuildTarget}");
+            Log($"Final verification - Target in options: {buildPlayerOptions.target}");
+            Log("✅ Build options created");
 
-            Log("Building APK...");
+            Log("Step 7: Starting APK build process...");
+            Log("This may take several minutes...");
             BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
             BuildSummary summary = report.summary;
+            Log("✅ Build process completed");
 
             // Kiểm tra kết quả
             if (summary.result == BuildResult.Succeeded)
@@ -286,20 +312,30 @@ public class BuildScript
         try
         {
             // QUAN TRỌNG: Switch build target sang Android trước
+            Log("Step 1: Checking and switching build target...");
             if (!SwitchToAndroidBuildTarget())
             {
-                LogError("Cannot proceed with Android build. Exiting...");
+                LogError("========================================");
+                LogError("❌ Cannot proceed with Android build!");
+                LogError("Build target switch failed. Exiting...");
+                LogError("========================================");
                 EditorApplication.Exit(1);
                 return;
             }
+            Log("✅ Build target check completed");
 
             // Setup Android build
+            Log("Step 2: Setting up Android build configuration...");
             SetupAndroidBuild();
+            Log("✅ Android build configuration completed");
 
             // Build AAB
+            Log("Step 3: Configuring build type (AAB)...");
             EditorUserBuildSettings.buildAppBundle = true;
+            Log("✅ Build type set to AAB");
 
             // Lấy base path và version
+            Log("Step 4: Preparing build paths...");
             string baseBuildPath = GetArgument("buildPath") ?? "Builds/Android";
             string versionNumber = GetArgument("versionNumber") ?? PlayerSettings.bundleVersion;
             string productName = PlayerSettings.productName;
@@ -309,25 +345,34 @@ public class BuildScript
             if (!Directory.Exists(versionPath))
             {
                 Directory.CreateDirectory(versionPath);
+                Log($"Created directory: {versionPath}");
             }
             
             string buildPath = Path.Combine(versionPath, $"{productName}.aab");
-
             Log($"Build Path: {buildPath}");
+            Log("✅ Build paths prepared");
 
             // Kiểm tra scenes
+            Log("Step 5: Validating scenes...");
             string[] scenes = GetEnabledScenes();
             if (scenes == null || scenes.Length == 0)
             {
+                LogError("========================================");
                 LogError("❌ No scenes enabled in Build Settings!");
                 LogError("Please add at least one scene to Build Settings:");
                 LogError("  File → Build Settings → Add Open Scenes");
+                LogError("========================================");
                 EditorApplication.Exit(1);
                 return;
             }
             
-            Log($"Scenes to build ({scenes.Length}): {string.Join(", ", scenes)}");
+            Log($"✅ Found {scenes.Length} scene(s) to build:");
+            for (int i = 0; i < scenes.Length; i++)
+            {
+                Log($"  [{i + 1}] {scenes[i]}");
+            }
 
+            Log("Step 6: Creating build options...");
             BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
             {
                 scenes = scenes,
@@ -335,10 +380,17 @@ public class BuildScript
                 target = BuildTarget.Android,
                 options = BuildOptions.None
             };
+            
+            // Verify build target one more time
+            Log($"Final verification - Active build target: {EditorUserBuildSettings.activeBuildTarget}");
+            Log($"Final verification - Target in options: {buildPlayerOptions.target}");
+            Log("✅ Build options created");
 
-            Log("Building AAB...");
+            Log("Step 7: Starting AAB build process...");
+            Log("This may take several minutes...");
             BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
             BuildSummary summary = report.summary;
+            Log("✅ Build process completed");
 
             // Kiểm tra kết quả
             if (summary.result == BuildResult.Succeeded)
@@ -497,43 +549,78 @@ public class BuildScript
     /// </summary>
     private static bool SwitchToAndroidBuildTarget()
     {
-        Log($"Current active build target: {EditorUserBuildSettings.activeBuildTarget}");
-        
-        // Kiểm tra Android build target có được support không
-        bool isSupported = BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android);
-        Log($"Android Build Target Supported: {isSupported}");
-        
-        if (!isSupported)
+        try
         {
-            LogError("❌ Android Build Target is NOT supported!");
-            LogError("Please install Android Build Support in Unity Hub:");
-            LogError("  Unity Hub → Installs → Add Modules → Android Build Support");
-            return false;
-        }
+            BuildTarget currentTarget = EditorUserBuildSettings.activeBuildTarget;
+            Log($"Current active build target: {currentTarget}");
+            
+            // Kiểm tra Android build target có được support không
+            bool isSupported = BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android);
+            Log($"Android Build Target Supported: {isSupported}");
+            
+            if (!isSupported)
+            {
+                LogError("❌ Android Build Target is NOT supported!");
+                LogError("Please install Android Build Support in Unity Hub:");
+                LogError("  Unity Hub → Installs → Add Modules → Android Build Support");
+                return false;
+            }
 
-        // Nếu đã là Android thì không cần switch
-        if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android)
-        {
-            Log("✅ Build target is already Android");
-            return true;
-        }
+            // Nếu đã là Android thì không cần switch
+            if (currentTarget == BuildTarget.Android)
+            {
+                Log("✅ Build target is already Android");
+                return true;
+            }
 
-        // Switch sang Android
-        Log($"Switching build target from {EditorUserBuildSettings.activeBuildTarget} to Android...");
-        bool switchResult = EditorUserBuildSettings.SwitchActiveBuildTarget(
-            BuildTargetGroup.Android, 
-            BuildTarget.Android
-        );
-        
-        if (switchResult)
-        {
-            Log("✅ Successfully switched to Android build target");
-            return true;
+            // Switch sang Android
+            Log($"Switching build target from {currentTarget} to Android...");
+            
+            try
+            {
+                bool switchResult = EditorUserBuildSettings.SwitchActiveBuildTarget(
+                    BuildTargetGroup.Android, 
+                    BuildTarget.Android
+                );
+                
+                if (switchResult)
+                {
+                    // Verify sau khi switch
+                    BuildTarget newTarget = EditorUserBuildSettings.activeBuildTarget;
+                    if (newTarget == BuildTarget.Android)
+                    {
+                        Log("✅ Successfully switched to Android build target (verified)");
+                        return true;
+                    }
+                    else
+                    {
+                        LogError($"⚠️  Warning: Switch reported success but active target is: {newTarget}");
+                        LogError("This may indicate a timing issue. Attempting to continue...");
+                        // Vẫn tiếp tục, có thể Unity đang xử lý
+                        return true;
+                    }
+                }
+                else
+                {
+                    LogError("❌ Failed to switch to Android build target!");
+                    LogError("SwitchActiveBuildTarget returned false.");
+                    LogError("This may indicate Android Build Support is not properly installed.");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"❌ Exception while switching build target: {ex.Message}");
+                LogError($"Exception type: {ex.GetType().Name}");
+                LogError($"Stack trace: {ex.StackTrace}");
+                return false;
+            }
         }
-        else
+        catch (Exception e)
         {
-            LogError("❌ Failed to switch to Android build target!");
-            LogError("This may indicate Android Build Support is not properly installed.");
+            LogError($"❌ Exception in SwitchToAndroidBuildTarget: {e.Message}");
+            LogError($"Exception type: {e.GetType().Name}");
+            LogError($"Stack trace: {e.StackTrace}");
             return false;
         }
     }
