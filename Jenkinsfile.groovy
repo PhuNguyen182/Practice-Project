@@ -220,41 +220,7 @@ pipeline {
         }
         
         // ========================================
-        // STAGE 3: Activate Unity License
-        // ========================================
-        stage('Activate License') {
-            steps {
-                script {
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'unity-gmail-credentials',
-                            usernameVariable: 'UNITY_USERNAME',
-                            passwordVariable: 'UNITY_PASSWORD'
-                        )
-                    ]) {
-                        bat """
-                            echo Activating Unity License...
-                            "${UNITY_PATH}" ^
-                            -batchmode ^
-                            -quit ^
-                            -username "%UNITY_USERNAME%" ^
-                            -password "%UNITY_PASSWORD%" ^
-                            -logFile "%WORKSPACE%\\Logs\\activation.log"
-                            
-                            if %errorlevel% neq 0 (
-                                echo License activation failed! Check log:
-                                type "%WORKSPACE%\\Logs\\activation.log"
-                                exit /b 1
-                            )
-                            echo License activated successfully!
-                        """
-                    }
-                }
-            }
-        }
-        
-        // ========================================
-        // STAGE 3.5: Verify Android Support (fail sớm nếu thiếu)
+        // STAGE 3: Verify Android Support (fail sớm nếu thiếu)
         // ========================================
         stage('Verify Android Support') {
             when {
