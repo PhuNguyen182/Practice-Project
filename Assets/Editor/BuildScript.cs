@@ -181,17 +181,29 @@ public class BuildScript
 
         try
         {
-            // QUAN TRỌNG: Switch build target sang Android trước
-            Log("Step 1: Checking and switching build target...");
-            if (!SwitchToAndroidBuildTarget())
+            // Trong batch mode, Unity đã được khởi động với -buildTarget Android
+            // Không cần switch target tường minh - BuildPlayerOptions sẽ xử lý
+            bool isBatchMode = IsBatchMode();
+            if (isBatchMode)
             {
-                LogError("========================================");
-                LogError("❌ Cannot proceed with Android build!");
-                LogError("Build target switch failed.");
-                LogError("========================================");
-                return false;
+                Log("Step 1: Batch mode detected - skipping explicit target switch");
+                Log($"Active build target (info only): {EditorUserBuildSettings.activeBuildTarget}");
+                Log("✅ Unity was started with -buildTarget Android - BuildPlayerOptions will handle the target");
             }
-            Log("✅ Build target check completed");
+            else
+            {
+                // Editor mode - vẫn cần switch target
+                Log("Step 1: Checking and switching build target...");
+                if (!SwitchToAndroidBuildTarget())
+                {
+                    LogError("========================================");
+                    LogError("❌ Cannot proceed with Android build!");
+                    LogError("Build target switch failed.");
+                    LogError("========================================");
+                    return false;
+                }
+                Log("✅ Build target check completed");
+            }
 
             // Setup Android build
             Log("Step 2: Setting up Android build configuration...");
@@ -355,17 +367,29 @@ public class BuildScript
 
         try
         {
-            // QUAN TRỌNG: Switch build target sang Android trước
-            Log("Step 1: Checking and switching build target...");
-            if (!SwitchToAndroidBuildTarget())
+            // Trong batch mode, Unity đã được khởi động với -buildTarget Android
+            // Không cần switch target tường minh - BuildPlayerOptions sẽ xử lý
+            bool isBatchMode = IsBatchMode();
+            if (isBatchMode)
             {
-                LogError("========================================");
-                LogError("❌ Cannot proceed with Android build!");
-                LogError("Build target switch failed.");
-                LogError("========================================");
-                return false;
+                Log("Step 1: Batch mode detected - skipping explicit target switch");
+                Log($"Active build target (info only): {EditorUserBuildSettings.activeBuildTarget}");
+                Log("✅ Unity was started with -buildTarget Android - BuildPlayerOptions will handle the target");
             }
-            Log("✅ Build target check completed");
+            else
+            {
+                // Editor mode - vẫn cần switch target
+                Log("Step 1: Checking and switching build target...");
+                if (!SwitchToAndroidBuildTarget())
+                {
+                    LogError("========================================");
+                    LogError("❌ Cannot proceed with Android build!");
+                    LogError("Build target switch failed.");
+                    LogError("========================================");
+                    return false;
+                }
+                Log("✅ Build target check completed");
+            }
 
             // Setup Android build
             Log("Step 2: Setting up Android build configuration...");
