@@ -22,12 +22,12 @@ pipeline {
         // Windows options
         booleanParam(
             name: 'BUILD_WINDOWS',
-            defaultValue: true,
+            defaultValue: false,
             description: '✓ Build Windows standalone'
         )
         booleanParam(
             name: 'ZIP_WINDOWS_BUILD',
-            defaultValue: true,
+            defaultValue: false,
             description: '✓ Nén build Windows thành file ZIP'
         )
         
@@ -39,7 +39,7 @@ pipeline {
         )
         booleanParam(
             name: 'BUILD_AAB',
-            defaultValue: true,
+            defaultValue: false,
             description: '✓ Build Android App Bundle (AAB)'
         )
         booleanParam(
@@ -51,7 +51,7 @@ pipeline {
         // iOS options
         booleanParam(
             name: 'BUILD_IOS',
-            defaultValue: true,
+            defaultValue: false,
             description: '✓ Build iOS Xcode project'
         )
         booleanParam(
@@ -63,7 +63,7 @@ pipeline {
         // Testing
         booleanParam(
             name: 'RUN_TESTS',
-            defaultValue: true,
+            defaultValue: false,
             description: '✓ Chạy Unit Tests trước khi build'
         )
         
@@ -95,11 +95,12 @@ pipeline {
         ANDROID_BUILD_PATH = "${BUILD_PATH}\\Android"
         IOS_BUILD_PATH = "${BUILD_PATH}\\iOS"
         
-        // Android Keystore (Cấu hình trong Jenkins Credentials)
-        ANDROID_KEYSTORE_PATH = credentials('android-keystore-file')
-        ANDROID_KEYSTORE_PASS = credentials('android-keystore-password')
-        ANDROID_KEY_ALIAS = credentials('android-key-alias')
-        ANDROID_KEY_PASS = credentials('android-key-password')
+        // Android Keystore (Sử dụng withCredentials trong buildAndroidAPK/buildAndroidAAB để tránh security warning)
+        // Các credentials được truyền trực tiếp trong withCredentials block, không cần khai báo ở đây
+        // ANDROID_KEYSTORE_PATH = credentials('android-keystore-file')
+        // ANDROID_KEYSTORE_PASS = credentials('android-keystore-password')
+        // ANDROID_KEY_ALIAS = credentials('android-key-alias')
+        // ANDROID_KEY_PASS = credentials('android-key-password')
         
         // Google Play Console (để upload AAB)
         GOOGLE_PLAY_SERVICE_ACCOUNT = credentials('google-play-service-account-json')
@@ -491,37 +492,55 @@ def buildWindows() {
 // Build Android APK
 def buildAndroidAPK() {
     echo '🤖 Building Android APK...'
-    bat """
-        "${UNITY_PATH}" -quit -batchmode -nographics ^
-        -projectPath "${PROJECT_PATH}" ^
-        -executeMethod BuildScript.BuildAndroidAPK ^
-        -buildPath "${ANDROID_BUILD_PATH}" ^
-        -keystorePath "${ANDROID_KEYSTORE_PATH}" ^
-        -keystorePass "${ANDROID_KEYSTORE_PASS}" ^
-        -keyaliasName "${ANDROID_KEY_ALIAS}" ^
-        -keyaliasPass "${ANDROID_KEY_PASS}" ^
-        -versionNumber ${VERSION} ^
-        -buildNumber ${BUILD_NUM} ^
-        -logFile "${WORKSPACE}\\unity-build-apk.log"
-    """
+    
+    // Sử dụng withCredentials để truyền secrets an toàn (tránh Groovy string interpolation warning)
+    withCredentials([
+        file(credentialsId: 'android-keystore-file', variable: 'KEYSTORE_FILE'),
+        string(credentialsId: 'android-keystore-password', variable: 'KEYSTORE_PASS'),
+        string(credentialsId: 'android-key-alias', variable: 'KEY_ALIAS'),
+        string(credentialsId: 'android-key-password', variable: 'KEY_PASS')
+    ]) {
+        bat """
+            "${UNITY_PATH}" -quit -batchmode ^
+            -projectPath "${PROJECT_PATH}" ^
+            -executeMethod BuildScript.BuildAndroidAPK ^
+            -buildPath "${ANDROID_BUILD_PATH}" ^
+            -keystorePath "%KEYSTORE_FILE%" ^
+            -keystorePass "%KEYSTORE_PASS%" ^
+            -keyaliasName "%KEY_ALIAS%" ^
+            -keyaliasPass "%KEY_PASS%" ^
+            -versionNumber ${VERSION} ^
+            -buildNumber ${BUILD_NUM} ^
+            -logFile "${WORKSPACE}\\unity-build-apk.log"
+        """
+    }
 }
 
 // Build Android AAB
 def buildAndroidAAB() {
     echo '📦 Building Android AAB...'
-    bat """
-        "${UNITY_PATH}" -quit -batchmode -nographics ^
-        -projectPath "${PROJECT_PATH}" ^
-        -executeMethod BuildScript.BuildAndroidAAB ^
-        -buildPath "${ANDROID_BUILD_PATH}" ^
-        -keystorePath "${ANDROID_KEYSTORE_PATH}" ^
-        -keystorePass "${ANDROID_KEYSTORE_PASS}" ^
-        -keyaliasName "${ANDROID_KEY_ALIAS}" ^
-        -keyaliasPass "${ANDROID_KEY_PASS}" ^
-        -versionNumber ${VERSION} ^
-        -buildNumber ${BUILD_NUM} ^
-        -logFile "${WORKSPACE}\\unity-build-aab.log"
-    """
+    
+    // Sử dụng withCredentials để truyền secrets an toàn (tránh Groovy string interpolation warning)
+    withCredentials([
+        file(credentialsId: 'android-keystore-file', variable: 'KEYSTORE_FILE'),
+        string(credentialsId: 'android-keystore-password', variable: 'KEYSTORE_PASS'),
+        string(credentialsId: 'android-key-alias', variable: 'KEY_ALIAS'),
+        string(credentialsId: 'android-key-password', variable: 'KEY_PASS')
+    ]) {
+        bat """
+            "${UNITY_PATH}" -quit -batchmode ^
+            -projectPath "${PROJECT_PATH}" ^
+            -executeMethod BuildScript.BuildAndroidAAB ^
+            -buildPath "${ANDROID_BUILD_PATH}" ^
+            -keystorePath "%KEYSTORE_FILE%" ^
+            -keystorePass "%KEYSTORE_PASS%" ^
+            -keyaliasName "%KEY_ALIAS%" ^
+            -keyaliasPass "%KEY_PASS%" ^
+            -versionNumber ${VERSION} ^
+            -buildNumber ${BUILD_NUM} ^
+            -logFile "${WORKSPACE}\\unity-build-aab.log"
+        """
+    }
 }
 
 // Build iOS
