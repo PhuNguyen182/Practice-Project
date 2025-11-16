@@ -501,7 +501,7 @@ def buildAndroidAPK() {
         string(credentialsId: 'android-key-password', variable: 'KEY_PASS')
     ]) {
         bat """
-            "${UNITY_PATH}" -quit -batchmode -nographics ^
+            "${UNITY_PATH}" -quit -batchmode ^
             -projectPath "${PROJECT_PATH}" ^
             -executeMethod BuildScript.BuildAndroidAPK ^
             -buildPath "${ANDROID_BUILD_PATH}" ^
@@ -528,7 +528,7 @@ def buildAndroidAAB() {
         string(credentialsId: 'android-key-password', variable: 'KEY_PASS')
     ]) {
         bat """
-            "${UNITY_PATH}" -quit -batchmode -nographics ^
+            "${UNITY_PATH}" -quit -batchmode ^
             -projectPath "${PROJECT_PATH}" ^
             -executeMethod BuildScript.BuildAndroidAAB ^
             -buildPath "${ANDROID_BUILD_PATH}" ^
