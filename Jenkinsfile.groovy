@@ -213,13 +213,48 @@ pipeline {
                         mkdir "${WINDOWS_BUILD_PATH}"
                         mkdir "${ANDROID_BUILD_PATH}"
                         mkdir "${IOS_BUILD_PATH}"
+                        if not exist "${WORKSPACE}\\Logs" mkdir "${WORKSPACE}\\Logs"
                     """
                 }
             }
         }
         
         // ========================================
-        // STAGE 3: Unity Tests (Optional)
+        // STAGE 3: Activate Unity License
+        // ========================================
+        stage('Activate License') {
+            steps {
+                script {
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'unity-gmail-credentials',
+                            usernameVariable: 'UNITY_USERNAME',
+                            passwordVariable: 'UNITY_PASSWORD'
+                        )
+                    ]) {
+                        bat """
+                            echo Activating Unity License...
+                            "${UNITY_PATH}" ^
+                            -batchmode ^
+                            -quit ^
+                            -username "%UNITY_USERNAME%" ^
+                            -password "%UNITY_PASSWORD%" ^
+                            -logFile "%WORKSPACE%\\Logs\\activation.log"
+                            
+                            if %errorlevel% neq 0 (
+                                echo License activation failed! Check log:
+                                type "%WORKSPACE%\\Logs\\activation.log"
+                                exit /b 1
+                            )
+                            echo License activated successfully!
+                        """
+                    }
+                }
+            }
+        }
+        
+        // ========================================
+        // STAGE 4: Unity Tests (Optional)
         // ========================================
         stage('Run Unity Tests') {
             when {
@@ -250,7 +285,7 @@ pipeline {
         }
         
         // ========================================
-        // STAGE 4: Build Platforms
+        // STAGE 5: Build Platforms
         // ========================================
         stage('Build Platforms') {
             steps {
@@ -502,8 +537,6 @@ def buildAndroidAPK() {
     ]) {
         bat """
             "${UNITY_PATH}" -quit -batchmode ^
-            -username "nguyenhuuphu1882.a@gmail.com" ^
-            -password "kdrpppnoxvsrload" ^
             -projectPath "${PROJECT_PATH}" ^
             -executeMethod BuildScript.BuildAndroidAPK ^
             -buildPath "${ANDROID_BUILD_PATH}" ^
