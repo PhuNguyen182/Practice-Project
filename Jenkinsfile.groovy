@@ -254,6 +254,45 @@ pipeline {
         }
         
         // ========================================
+        // STAGE 3.5: Verify Android Support (fail sớm nếu thiếu)
+        // ========================================
+        stage('Verify Android Support') {
+            when {
+                expression { return (params.BUILD_TARGET == 'All' || params.BUILD_TARGET.contains('Android') || params.BUILD_TARGET == 'Android' || params.BUILD_APK || params.BUILD_AAB || params.BUILD_APK_NO_KEYSTORE) }
+            }
+            steps {
+                echo '🔎 Kiểm tra Android Build Support...'
+                script {
+                    bat """
+                        set UNITY_VER=%UNITY_VERSION%
+                        set PE="C:\\Program Files\\Unity\\Hub\\Editor\\%UNITY_VER%\\Editor\\Data\\PlaybackEngines"
+                        echo UNITY VERSION: %UNITY_VER%
+                        echo PLAYBACK ENGINES: %PE%
+                        if not exist %PE% (
+                            echo ❌ PlaybackEngines folder NOT FOUND for Unity %UNITY_VER%
+                            exit /b 1
+                        )
+                        dir /B %PE%
+                        if not exist %PE%\\AndroidPlayer (
+                            echo ❌ AndroidPlayer NOT FOUND for Unity %UNITY_VER%
+                            echo 👉 Vui lòng cài đặt: Android Build Support + SDK/NDK + OpenJDK cho đúng phiên bản Unity
+                            exit /b 1
+                        )
+                        echo ✅ FOUND AndroidPlayer
+                        if exist %PE%\\AndroidPlayer\\SDK (echo ✅ SDK OK) else (echo ❌ SDK MISSING & set ERRORLEVEL=1)
+                        if exist %PE%\\AndroidPlayer\\NDK (echo ✅ NDK OK) else (echo ❌ NDK MISSING & set ERRORLEVEL=1)
+                        if exist %PE%\\AndroidPlayer\\OpenJDK (echo ✅ OpenJDK OK) else (echo ❌ OpenJDK MISSING & set ERRORLEVEL=1)
+                        if %errorlevel% neq 0 (
+                            echo ❌ Android components missing. Please install them in Unity Hub (Installs -> %UNITY_VER% -> Add Modules)
+                            exit /b 1
+                        )
+                        echo ✅ Android Build Support verified
+                    """
+                }
+            }
+        }
+        
+        // ========================================
         // STAGE 4: Unity Tests (Optional)
         // ========================================
         stage('Run Unity Tests') {
@@ -537,6 +576,7 @@ def buildAndroidAPK() {
     ]) {
         bat """
             "${UNITY_PATH}" -quit -batchmode ^
+            -buildTarget Android ^
             -projectPath "${PROJECT_PATH}" ^
             -executeMethod BuildScript.BuildAndroidAPK ^
             -buildPath "${ANDROID_BUILD_PATH}" ^
@@ -564,6 +604,7 @@ def buildAndroidAAB() {
     ]) {
         bat """
             "${UNITY_PATH}" -quit -batchmode ^
+            -buildTarget Android ^
             -projectPath "${PROJECT_PATH}" ^
             -executeMethod BuildScript.BuildAndroidAAB ^
             -buildPath "${ANDROID_BUILD_PATH}" ^
