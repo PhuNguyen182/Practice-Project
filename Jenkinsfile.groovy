@@ -22,12 +22,12 @@ pipeline {
         // Windows options
         booleanParam(
             name: 'BUILD_WINDOWS',
-            defaultValue: true,
+            defaultValue: false,
             description: '✓ Build Windows standalone'
         )
         booleanParam(
             name: 'ZIP_WINDOWS_BUILD',
-            defaultValue: true,
+            defaultValue: false,
             description: '✓ Nén build Windows thành file ZIP'
         )
         
@@ -39,7 +39,7 @@ pipeline {
         )
         booleanParam(
             name: 'BUILD_AAB',
-            defaultValue: true,
+            defaultValue: false,
             description: '✓ Build Android App Bundle (AAB)'
         )
         booleanParam(
@@ -51,7 +51,7 @@ pipeline {
         // iOS options
         booleanParam(
             name: 'BUILD_IOS',
-            defaultValue: true,
+            defaultValue: false,
             description: '✓ Build iOS Xcode project'
         )
         booleanParam(
@@ -63,7 +63,7 @@ pipeline {
         // Testing
         booleanParam(
             name: 'RUN_TESTS',
-            defaultValue: true,
+            defaultValue: false,
             description: '✓ Chạy Unit Tests trước khi build'
         )
         
