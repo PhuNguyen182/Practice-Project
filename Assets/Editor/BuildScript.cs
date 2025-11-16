@@ -254,7 +254,7 @@ public class BuildScript
 
             Log("Step 6: Verifying Android build target is supported...");
             bool isAndroidSupported = BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android);
-            bool isBatchMode = IsBatchMode();
+            isBatchMode = IsBatchMode();
             
             if (!isAndroidSupported)
             {
@@ -477,7 +477,7 @@ public class BuildScript
 
             Log("Step 6: Verifying Android build target is supported...");
             bool isAndroidSupported = BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android);
-            bool isBatchMode = IsBatchMode();
+            isBatchMode = IsBatchMode();
             
             if (!isAndroidSupported)
             {
