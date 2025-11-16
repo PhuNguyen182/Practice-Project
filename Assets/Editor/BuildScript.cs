@@ -182,7 +182,7 @@ public class BuildScript
         try
         {
             // QUAN TRỌNG: Switch build target sang Android trước
-            Log("Step 1: Checking and switching build target...");
+            /*Log("Step 1: Checking and switching build target...");
             if (!SwitchToAndroidBuildTarget())
             {
                 LogError("========================================");
@@ -191,7 +191,7 @@ public class BuildScript
                 LogError("========================================");
                 //return false;
             }
-            Log("✅ Build target check completed");
+            Log("✅ Build target check completed");*/
 
             // Setup Android build
             Log("Step 2: Setting up Android build configuration...");
