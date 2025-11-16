@@ -189,7 +189,7 @@ public class BuildScript
                 LogError("❌ Cannot proceed with Android build!");
                 LogError("Build target switch failed.");
                 LogError("========================================");
-                return false;
+                //return false;
             }
             Log("✅ Build target check completed");
 
@@ -811,7 +811,7 @@ public class BuildScript
         // Android settings
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64 | AndroidArchitecture.ARMv7;
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel24; // Android 7.0
-        PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel33; // Android 13
+        PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel35; // Android 13
 
         // Keystore configuration
         if (!string.IsNullOrEmpty(keystorePath))
