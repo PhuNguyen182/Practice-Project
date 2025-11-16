@@ -264,29 +264,81 @@ pipeline {
                 echo '🔎 Kiểm tra Android Build Support...'
                 script {
                     bat """
+                        @echo off
+                        setlocal enabledelayedexpansion
                         set UNITY_VER=%UNITY_VERSION%
-                        set PE="C:\\Program Files\\Unity\\Hub\\Editor\\%UNITY_VER%\\Editor\\Data\\PlaybackEngines"
+                        set "PE=C:\\Program Files\\Unity\\Hub\\Editor\\%UNITY_VER%\\Editor\\Data\\PlaybackEngines"
+                        set "AP=%PE%\\AndroidPlayer"
+                        
+                        echo ========================================
+                        echo Verifying Android Build Support...
+                        echo ========================================
                         echo UNITY VERSION: %UNITY_VER%
                         echo PLAYBACK ENGINES: %PE%
-                        if not exist %PE% (
+                        echo.
+                        
+                        if not exist "%PE%" (
                             echo ❌ PlaybackEngines folder NOT FOUND for Unity %UNITY_VER%
+                            echo Path checked: %PE%
                             exit /b 1
                         )
-                        dir /B %PE%
-                        if not exist %PE%\\AndroidPlayer (
+                        
+                        echo ✅ PlaybackEngines folder found
+                        dir /B "%PE%"
+                        echo.
+                        
+                        if not exist "%AP%" (
                             echo ❌ AndroidPlayer NOT FOUND for Unity %UNITY_VER%
+                            echo Path checked: %AP%
                             echo 👉 Vui lòng cài đặt: Android Build Support + SDK/NDK + OpenJDK cho đúng phiên bản Unity
                             exit /b 1
                         )
+                        
                         echo ✅ FOUND AndroidPlayer
-                        if exist %PE%\\AndroidPlayer\\SDK (echo ✅ SDK OK) else (echo ❌ SDK MISSING & set ERRORLEVEL=1)
-                        if exist %PE%\\AndroidPlayer\\NDK (echo ✅ NDK OK) else (echo ❌ NDK MISSING & set ERRORLEVEL=1)
-                        if exist %PE%\\AndroidPlayer\\OpenJDK (echo ✅ OpenJDK OK) else (echo ❌ OpenJDK MISSING & set ERRORLEVEL=1)
-                        if %errorlevel% neq 0 (
-                            echo ❌ Android components missing. Please install them in Unity Hub (Installs -> %UNITY_VER% -> Add Modules)
+                        echo Checking components...
+                        echo.
+                        
+                        set HAS_ERROR=0
+                        
+                        if not exist "%AP%\\SDK" (
+                            echo ❌ SDK MISSING
+                            echo    Path checked: %AP%\\SDK
+                            set HAS_ERROR=1
+                        ) else (
+                            echo ✅ SDK OK
+                        )
+                        
+                        if not exist "%AP%\\NDK" (
+                            echo ❌ NDK MISSING
+                            echo    Path checked: %AP%\\NDK
+                            set HAS_ERROR=1
+                        ) else (
+                            echo ✅ NDK OK
+                        )
+                        
+                        if not exist "%AP%\\OpenJDK" (
+                            echo ❌ OpenJDK MISSING
+                            echo    Path checked: %AP%\\OpenJDK
+                            set HAS_ERROR=1
+                        ) else (
+                            echo ✅ OpenJDK OK
+                        )
+                        
+                        echo.
+                        if !HAS_ERROR!==1 (
+                            echo ========================================
+                            echo ❌ Android components missing!
+                            echo ========================================
+                            echo Please install them in Unity Hub:
+                            echo    Installs -^> %UNITY_VER% -^> Add Modules -^> Android Build Support
+                            echo ========================================
                             exit /b 1
                         )
-                        echo ✅ Android Build Support verified
+                        
+                        echo ========================================
+                        echo ✅ Android Build Support verified - All components OK!
+                        echo ========================================
+                        endlocal
                     """
                 }
             }
