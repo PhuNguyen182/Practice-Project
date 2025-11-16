@@ -13,6 +13,7 @@ using UnityEngine;
 /// </summary>
 public class BuildScript
 {
+    // Jenkins Password: kdrpppnoxvsrload
     // ============================================
     // BUILD CONFIGURATIONS
     // ============================================

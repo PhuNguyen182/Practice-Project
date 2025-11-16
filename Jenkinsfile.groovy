@@ -502,6 +502,8 @@ def buildAndroidAPK() {
     ]) {
         bat """
             "${UNITY_PATH}" -quit -batchmode ^
+            -username "nguyenhuuphu1882.a@gmail.com" ^
+            -password "kdrpppnoxvsrload" ^
             -projectPath "${PROJECT_PATH}" ^
             -executeMethod BuildScript.BuildAndroidAPK ^
             -buildPath "${ANDROID_BUILD_PATH}" ^
