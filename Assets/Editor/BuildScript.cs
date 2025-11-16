@@ -252,7 +252,26 @@ public class BuildScript
                 Log($"  [{i + 1}] {scenes[i]}");
             }
 
-            Log("Step 6: Creating build options...");
+            Log("Step 6: Verifying Android build target is supported...");
+            bool isAndroidSupported = BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android);
+            if (!isAndroidSupported)
+            {
+                LogError("========================================");
+                LogError("❌ Android build target is NOT SUPPORTED!");
+                LogError("");
+                LogError("This means Unity cannot find Android Build Support module.");
+                LogError("");
+                LogError("Please verify:");
+                LogError("  1. Android Build Support is installed for Unity " + Application.unityVersion);
+                LogError("  2. Check: C:\\Program Files\\Unity\\Hub\\Editor\\" + Application.unityVersion + "\\Editor\\Data\\PlaybackEngines\\AndroidPlayer");
+                LogError("  3. Restart Unity/Jenkins after installing Android modules");
+                LogError("  4. Make sure Unity was started with -buildTarget Android parameter");
+                LogError("========================================");
+                return false;
+            }
+            Log("✅ Android build target is supported");
+            
+            Log("Step 7: Creating build options...");
             BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
             {
                 scenes = scenes,
@@ -264,9 +283,10 @@ public class BuildScript
             // Verify build target one more time
             Log($"Final verification - Active build target: {EditorUserBuildSettings.activeBuildTarget}");
             Log($"Final verification - Target in options: {buildPlayerOptions.target}");
+            Log($"Final verification - Android supported: {isAndroidSupported}");
             Log("✅ Build options created");
 
-            Log("Step 7: Starting APK build process...");
+            Log("Step 8: Starting APK build process...");
             Log("This may take several minutes...");
             BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
             BuildSummary summary = report.summary;
@@ -438,7 +458,26 @@ public class BuildScript
                 Log($"  [{i + 1}] {scenes[i]}");
             }
 
-            Log("Step 6: Creating build options...");
+            Log("Step 6: Verifying Android build target is supported...");
+            bool isAndroidSupported = BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Android, BuildTarget.Android);
+            if (!isAndroidSupported)
+            {
+                LogError("========================================");
+                LogError("❌ Android build target is NOT SUPPORTED!");
+                LogError("");
+                LogError("This means Unity cannot find Android Build Support module.");
+                LogError("");
+                LogError("Please verify:");
+                LogError("  1. Android Build Support is installed for Unity " + Application.unityVersion);
+                LogError("  2. Check: C:\\Program Files\\Unity\\Hub\\Editor\\" + Application.unityVersion + "\\Editor\\Data\\PlaybackEngines\\AndroidPlayer");
+                LogError("  3. Restart Unity/Jenkins after installing Android modules");
+                LogError("  4. Make sure Unity was started with -buildTarget Android parameter");
+                LogError("========================================");
+                return false;
+            }
+            Log("✅ Android build target is supported");
+            
+            Log("Step 7: Creating build options...");
             BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
             {
                 scenes = scenes,
@@ -450,9 +489,10 @@ public class BuildScript
             // Verify build target one more time
             Log($"Final verification - Active build target: {EditorUserBuildSettings.activeBuildTarget}");
             Log($"Final verification - Target in options: {buildPlayerOptions.target}");
+            Log($"Final verification - Android supported: {isAndroidSupported}");
             Log("✅ Build options created");
 
-            Log("Step 7: Starting AAB build process...");
+            Log("Step 8: Starting AAB build process...");
             Log("This may take several minutes...");
             BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
             BuildSummary summary = report.summary;
